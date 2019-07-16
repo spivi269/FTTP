@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="tournament.js"></script>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body onload="init();">
+        <div id="pageHeader"></div>
+        <div  id="pageBody">
+            <div id="nameInput">Enter Name: 
+                <input id="nameToAdd" type="text" value="Paul">
+                <button id="submitName" type="button" onclick="addName(document.getElementById('nameToAdd'));">Submit</button>
+                kValue: 
+                <input id="kValue" type="number" value=800>
+            </div>
+            <div id="namesList"></div>
+        </div>
+        <div style='position:fixed; bottom:0; right:0;'>V0.3.1</div>
+    </body>
+</html>
