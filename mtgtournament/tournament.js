@@ -1,5 +1,5 @@
 const DRAW_ATTENUATE=5;
-var kValue=0;
+var kValue=800;
 var namesArray = [];
 var nameIndexNumberClicked;
 var currentlyChangeingName = false;
@@ -13,6 +13,7 @@ var savedPageState={tables:null};
 var playerToSwap=null;
 var oldTables=null;
 var hadStratifiedRound=false;
+var storeNewPoints=null;
 
 
 function init() {
@@ -78,7 +79,8 @@ function printNamesList(whereToPrint,whatToPrint,isEditable){
 function drawButton() {
     if (namesArray.length>=3 && namesArray.length!=5){
          document.getElementById("namesList").innerHTML+=
-         "<button onclick=\"kValue=document.getElementById('kValue').value;createPlayerList();drawNavigation();drawPlayerList();\" type=\"button\">Submit List</button>";
+        // "<button onclick=\"kValue=document.getElementById('kValue').value;createPlayerList();drawNavigation();drawPlayerList();\" type=\"button\">Submit List</button>";
+        "<button onclick=\"createPlayerList();drawNavigation();drawPlayerList();\" type=\"button\">Submit List</button>";
     }
     return;
 }
@@ -156,7 +158,12 @@ function getTableCount(playerCount) {
 function drawNavigation() {
     document.getElementById("pageHeader").innerHTML=
     "<button onclick=\"drawPlayerList('init')\";>Playerlist</button onclick=\"drawTables()\";>" +
-    "<button onclick=\"drawTables();\">Tables</button><div id='roundNumber'>Round Number: " + roundNumber + "</div><br>";
+    "<button onclick=\"resetPlayerListSorting();drawTables();\">Tables</button><div style='position:fixed; top:0; right:0;' id='roundNumber'>Round Number: " + roundNumber + "</div><br>";
+}
+
+function resetPlayerListSorting(){
+    playerListSortState.row="";
+    playerListSortState.reversed=false;
 }
 
 function updateRoundNumber(){
@@ -189,12 +196,12 @@ function drawTablesSwap(){
             "<table width=\"500\"><tr><th style='background-color:rgb(30,30,30);' colspan=\"" + table.seats + "\">Table #" + (index+1) + "</th></tr><tr>";
             //for (let j=0;j<tables[i].players.length;j++) {
             table.players.forEach(function(player,i){
-                text+="<td class='NotSelected' id='player" + player.id + "' onclick='selectSwap("+ index + "," + player.id + ")' style=\"width:" + Math.floor(100/(table.players.length)) + "%;\">" + player.name + "</td>";
+                text+="<td class='NotSelected' id='player" + player.id + "' onclick='selectSwap("+ index + "," + player.id + ")' style=\"cursor:pointer;width:" + Math.floor(100/(table.players.length)) + "%;\">" + player.name + "</td>";
             });
             text+="</tr></table></td></tr>";
         });
         text+="</table>";
-        text+="<br>-------------------------------------------------------------            <br>"+oldTables;
+        text+=oldTables;
         savedPageState.tables=text;
         document.getElementById("pageBody").innerHTML=text;
     }
@@ -265,83 +272,48 @@ function drawTables() {
         text+="<tr class='woB'><td class='woB'>" + // tables+players
         "<table width=\"500\"><tr><th style='background-color:rgb(30,30,30);' colspan=\"" + table.seats + "\">Table #" + (index+1) + "</th></tr><tr>";
         table.players.forEach(function(player,i){
-            text+="<td class='NotSelected' id='player" + player.id + "' onclick='selectWinner("+ index + "," + player.id + ")' style=\"width:" + Math.floor(100/(table.players.length)) + "%;\">" + player.name + "</td>";
+            text+="<td class='NotSelected' id='player" + player.id + "' onclick='selectWinner("+ index + "," + player.id + ")' style=\"cursor:pointer;width:" + Math.floor(100/(table.players.length)) + "%;\">" + player.name + "</td>";
         });
         text+="</tr>"+"</table></td>"+
-        "<td class='woB'><button style='padding: 16px; font-size: 16px; border: none;' class='NotSelected' id='table"+index+"' onclick='selectWinner("+index+",-1)'>draw</button></td></tr>";
+        "<td class='woB'><button style='border: 1px solid rgb(221, 221, 221);border-collapse:collapse;text-align:center;cursor:pointer;padding:16px;"+/*" border: 1px;"+*/"' class='NotSelected' id='table"+index+"' onclick='selectWinner("+index+",-1)'>draw</button></td><td class='woB' id='gameInfo"+index+"'></td></tr>";
     });
     text+="</table>";
     savedPageState.tables=text;
     document.getElementById("pageBody").innerHTML=text;
 }
 
-/*
-function drawTables() {
-    if (savedPageState.tables!=null){
-        loadPageSavedState("tables");
-        return;
-    }
-
-    if(tables==null){
-        if(tableCount==null) tableCount=getTableCount(namesArray.length);
-        document.getElementById("pageBody").innerHTML="No Tables created yet.<br>" +
-        "The following will be created:<br>"+
-        "4-player-tables: " + tableCount.fourPlayerTables + "<br>" +
-        "3-player-tables: " + tableCount.threePlayerTables + "<br><br>" +
-        "<button onclick='createTables();drawTables();'>Create Tables</button>";
-        return;
-    }
-
-    var text="# of Tables: " + tables.length + "<br><br><div id='commitButton'><br></div>";
-
-    text+="<table class=\"woB\">"
-    for (var i=0;i<tables.length;i++) {
-        //winner selector
-        text+="<tr class='woB'><td style='width:250px;' class=\"woB\">" +
-        "<div class=\"dropdown\">" +
-        "<button id=\"winSel" + i + "\" class=\"dropbtn\">Select winner</button>" +
-        "<div class=\"dropdown-content\">";
-
-        for (var j=0;j<tables[i].players.length;j++) {
-            text+="<a href=\"javascript:selectWinner(" + i + "," +tables[i].players[j].id + ")\">" + tables[i].players[j].name + "</a>";
-        }
-        text+="<a style=\"background-color:#585858;color:#ddd\" href=\"javascript:selectWinner(" + i + ",-1)\" id=\"\">*DRAW*</a>"
-        text+="</div></div></td><td class='woB'>" + 
-        "<table width=\"500\"><tr><th style='background-color:rgb(30,30,30);' colspan=\"" + tables[i].seats + "\">Table #" + (i+1) + "</th></tr><tr>";
-
-        for (var j=0;j<tables[i].players.length;j++) {
-            text+="<td style=\"width:" + Math.floor(100/(tables[i].players.length)) + "%;\">" + tables[i].players[j].name + "</td>";
-        }
-        text+="</tr></table></td></tr>";
-    }
-    text+="</table>";
-    document.getElementById("pageBody").innerHTML=text;
-//    if(selectedWinner!=null) selectedWinner.forEach(updateWinnerButton);
-    savedPageState.tables=text;
-}
-*/
 function drawPlayerList(sortBy) {
     if (sortBy==null) sortBy="init";
     var text="Total players: " + playerList.length + "<br>";
 
     if ((sortBy==playerListSortState.row)&&(sortBy!="init")) playerListSortState.reversed=!playerListSortState.reversed;
     else playerListSortState.reversed=false;
-    if (sortBy=="init") sortBy="points";
+    if (sortBy=="init") sortBy="rank";
 
     playerListSortState.row=sortBy;
 
     text+="<table class='playerlist' width=\"100%\"><thead style=\"cursor:pointer;background-color:rgb(30,30,30);\"><tr>" +
-    "<th onclick=\"drawPlayerList('id')\">id</th>" +
-    "<th onclick=\"drawPlayerList('name')\">Name</th>" +
-    "<th onclick=\"drawPlayerList('roundsWon')\">Won rounds</th>" +
-    "<th onclick=\"drawPlayerList('roundsLost')\">Lost rounds</th>" +
-    "<th onclick=\"drawPlayerList('points')\">Points</th>" +
-    "<th onclick=\"drawPlayerList('table')\">Table#</th>" +
-    "<th onclick=\"drawPlayerList('drop')\">Drop</th>" +
-    "<th onclick=\"drawPlayerList('playedAgainst')\">Played Against</th>" +
+    "<th id='sortid' onclick=\"drawPlayerList('id')\">id</th>" +
+    "<th id='sortname' onclick=\"drawPlayerList('name')\">Name</th>" +
+    "<th id='sortroundswon' onclick=\"drawPlayerList('roundsWon')\">Won rounds</th>" +
+    "<th id='sortroundslost' onclick=\"drawPlayerList('roundsLost')\">Lost rounds</th>" +
+    "<th id='sortrank' onclick=\"drawPlayerList('rank')\">Rank</th>" +
+    "<th id='sortpoints' onclick=\"drawPlayerList('points')\">Points</th>" +
+    "<th id='sorttable' onclick=\"drawPlayerList('table')\">Table#</th>" +
+    "<th id='sortdrop' onclick=\"drawPlayerList('drop')\">Drop</th>" +
+    "<th id='sortplayedagainst' onclick=\"drawPlayerList('playedAgainst')\">Played Against</th>" +
     "</tr></thead><tbody>";
 
     switch(sortBy){
+        case "rank":
+            playerList.sort(function(a,b){
+                if(a.rank==b.rank)return(a.id-b.id);
+                else {
+                    if (playerListSortState.reversed) return (b.rank-a.rank);
+                    else return (a.rank-b.rank);
+                }
+            });
+            break;
         case "id":
             playerList.sort(function(a,b){
                 if (playerListSortState.reversed) return (b.id-a.id);
@@ -421,6 +393,7 @@ function drawPlayerList(sortBy) {
         "</td><td>" + playerList[i].name +
         "</td><td>" + playerList[i].roundsWon +
         "</td><td>" + playerList[i].roundsLost +
+        "</td><td>" + playerList[i].rank +
         "</td><td>" + Math.round(playerList[i].points) +
         "</td><td>");
         if(tables==null) text+="N/A";
@@ -438,12 +411,46 @@ function drawPlayerList(sortBy) {
     }
     text+="</tbody></table>"
     document.getElementById("pageBody").innerHTML=text;
+    switch(sortBy){
+        case "id":
+            if(!playerListSortState.reversed) document.getElementById('sortrank').innerHTML+="&#x25BC;";
+            else document.getElementById('sortrank').innerHTML+="&#x25B2;";
+        break;
+        case "id":
+            if(!playerListSortState.reversed) document.getElementById('sortid').innerHTML+="&#x25BC;";
+            else document.getElementById('sortid').innerHTML+="&#x25B2;";
+        break;
+        case "name":
+            if(!playerListSortState.reversed) document.getElementById('sortname').innerHTML+="&#x25BC;";
+            else document.getElementById('sortname').innerHTML+="&#x25B2;";
+        break;
+        case "roundsWon":
+            if(!playerListSortState.reversed) document.getElementById('sortroundswon').innerHTML+="&#x25BC;";
+            else document.getElementById('sortroundswon').innerHTML+="&#x25B2;";
+        break;
+        case "roundsLost":
+            if(!playerListSortState.reversed) document.getElementById('sortroundslost').innerHTML+="&#x25BC;";
+            else document.getElementById('sortroundslost').innerHTML+="&#x25B2;";
+        break;
+        case "points":
+            if(!playerListSortState.reversed) document.getElementById('sortpoints').innerHTML+="&#x25BC;";
+            else document.getElementById('sortpoints').innerHTML+="&#x25B2;";
+        break;
+        case "drop":
+            if(!playerListSortState.reversed) document.getElementById('sortdrop').innerHTML+="&#x25BC;";
+            else document.getElementById('sortdrop').innerHTML+="&#x25B2;";
+        break;
+        case "table":
+                if(!playerListSortState.reversed) document.getElementById('sorttable').innerHTML+="&#x25BC;";
+                else document.getElementById('sorttable').innerHTML+="&#x25B2;";
+        break;
+    }
     //document.getElementById(sortBy).outerHTML="<th onclick=\"\" id=\"" + sortBy + "\">"+document.getElementById(sortBy).innerHTML+"</th>";
 }
 
 function createPlayerList() {
     for (let i=0;i<namesArray.length;i++) {
-        let x = playerList.push({name:namesArray[i],id:i+1,roundsWon:[],roundsLost:[],points:1000,dropped:false,playedAgainst:[],table:null});
+        let x = playerList.push({name:namesArray[i],id:i+1,roundsWon:[],roundsLost:[],points:1000,dropped:false,playedAgainst:[],table:null,rank:1});
         for (let j=1;j<=namesArray.length;j++) {
             /* if (j!=(i+1)) */ playerList[x-1].playedAgainst.push({opponentID:j,countPlayed:0});
         }
@@ -559,6 +566,7 @@ function checkSwapCollision(a,b){
 */
 function assignPlayersToTables(method) {
     let checkList;
+    commitWinners();
     switch (method)
     {
         case "random":
@@ -783,7 +791,22 @@ function createTables() {
 };
 
 function selectWinner(tableNumber, playerID) {
-    if (selectedWinner.length==0) {
+    if ((document.getElementById("table"+tableNumber).getAttribute("class")=="Selected")&&(playerID==-1)) {
+        console.log("skipping draw update");
+        return;
+    }
+    if ((playerID!=-1)&&(document.getElementById("player"+playerID).getAttribute("class")=="Selected")) {
+        console.log("skipping winner update");
+        return;
+    }
+    if (storeNewPoints==null) {
+        storeNewPoints=[];
+        tables.forEach(function(table){
+            storeNewPoints.push([]);
+            table.players.forEach(function(player){
+                 storeNewPoints[storeNewPoints.length-1].push(null);
+            });
+        });
         for (let i=0;i<tables.length;i++) selectedWinner.push(null);
     }
     if(selectedWinner[tableNumber]!=null){
@@ -793,10 +816,26 @@ function selectWinner(tableNumber, playerID) {
     selectedWinner[tableNumber]=playerID;
     if(playerID==-1)document.getElementById("table"+tableNumber).setAttribute("class", "Selected");
     else document.getElementById("player"+playerID).setAttribute("class", "Selected");
-    if(!selectedWinner.some(function(a){return a==null;}))
-        document.getElementById("commitButton").innerHTML="<button onclick='commitWinners();'>Commit Winners</button>"
+
+    document.getElementById('gameInfo'+tableNumber).innerHTML=calcWinner(tableNumber,playerID);
+
+    if(!selectedWinner.some(function(a){return a==null;})){
+        document.getElementById("commitButton").innerHTML="Next round should be: "+
+    "<button onclick='assignPlayersToTables(\"balanced\")'>balanced</button> "+
+    "<button onclick='assignPlayersToTables(\"stratified\")'>stratified</button> "+
+    "<button onclick='finishTournament()'>finish tournament</button><br>"
+    }
     savedPageState.tables=document.getElementById("pageBody").innerHTML;
 }
+
+function finishTournament(){
+    commitWinners();
+   // document.getElementById("pageHeader").innerHTML="<button onmouseup='document.getElementById(\"reloadButton\").innerHTML=\"click again\";document.getElementById(\"reloadButton\").onmousedown=location.reload();' id='reloadButton'>run another tournament</button>";
+    drawPlayerList("points");
+    return;
+}
+
+
 
 function parseArray(array,index,direction) {
     if((isNaN(direction))||(isNaN(index))) return null;
@@ -822,70 +861,81 @@ function findPlayerByID(id){
     });
 }
 
-function commitWinners() {
+function calcWinner(tableNumber,playerID) {
+    let table=tables[tableNumber];
     let newPoints=0;
-    let text="Next round should be: "+
-    "<button onclick='assignPlayersToTables(\"balanced\")'>balanced</button>"+
-    "<button onclick='assignPlayersToTables(\"stratified\")'>stratified</button><br><br>";
+    let text="";
+    let winnerIndex=table.players.findIndex(function(a){return a.id==playerID;});
+    table.players.forEach(function(player,i){
+        newPoints=0;
+        switch(playerID){
+            case -1:
+                newPoints=0;
+                table.players.forEach(function(otherP){
+                    if(otherP.id!=player.id){
+                        let e=(1/(1+(10**((otherP.points-player.points)/400))));
+                        newPoints+=player.points+(kValue*(0.5-e)/DRAW_ATTENUATE);
+                        //console.log("newPoints="+newPoints);
+                    }
+                });
+                newPoints/=(table.seats-1);
+                text+=player.name+" drew. Points: "+((Math.round(player.points*100))/100);
+                if((player.points-newPoints)<=0) text+=" + ";
+                else text+=" - ";
+                text+=((Math.round(Math.abs(player.points-newPoints)*100))/100);
+                storeNewPoints[tableNumber][i]=newPoints;
+                text+=" = "+((Math.round(storeNewPoints[tableNumber][i]*100))/100);
+                break;
+            case player.id:
+                newPoints=0;
+                table.players.forEach(function(loser){
+                    if(loser.id!=player.id){
+                        let e=(1/(1+(10**((loser.points-player.points)/400))));
+                        newPoints+=player.points+(kValue*(1-e));
+                    }
+                });
+                newPoints/=(table.seats-1);
+                text+=player.name+" won. Points: "+((Math.round(player.points*100))/100)+" + "+((Math.round((newPoints-player.points)*100))/100);
+                storeNewPoints[tableNumber][i]=newPoints;
+                text+=" = "+((Math.round(storeNewPoints[tableNumber][i]*100))/100);
+                break;
+            default:
+                let e=(1/(1+(10**((table.players[winnerIndex].points-player.points)/400))));
+                newPoints=player.points+(kValue*(0-e)/3);
+                text+=player.name+" lost. Points: "+((Math.round(player.points*100))/100)+" - "+((Math.round((player.points-newPoints)*100))/100);
+                storeNewPoints[tableNumber][i]=newPoints;
+                text+=" = "+((Math.round(storeNewPoints[tableNumber][i]*100))/100);
+        }
+        if(i<(table.players.length-1)) text+="<br>";
+    });
+
+    return text;
+}
+
+function commitWinners() {
+    let rank=0;
+    let pointsBefore=-1;
+    storeNewPoints.forEach(function(table,index){
+        table.forEach(function(points,playerID){
+            tables[index].players[playerID].points=points;
+        });
+    });
+    playerList.sort(function(b,a){return (a.points-b.points);});
+    playerList.forEach(function(player,index){
+        if(pointsBefore!=player.points){
+            rank++;
+            pointsBefore=player.points;
+        }
+        player.rank=rank;
+    });
+
     tables.forEach(function(table,index){
-        text+="Table #"+(index+1)+":<br>";
-        let winnerIndex=table.players.findIndex(function(a){return a.id==selectedWinner[index];});
-        //let tableAverage=null;
-        let storeNewPoints=[];
-        table.players.forEach(function(player,i){
-            newPoints=0;
-            switch(selectedWinner[index]){
-                case -1:
-                    /*if (tableAverage==null){
-                        tableAverage=0;
-                        table.players.forEach(function(p){tableAverage+=p.points});
-                        tableAverage/=table.seats;
-                        console.log("tableAverage="+tableAverage);
-                    }*/
-                    newPoints=0;
-                    table.players.forEach(function(otherP){
-                        if(otherP.id!=player.id){
-                            let e=(1/(1+(10**((otherP.points-player.points)/400))));
-                            newPoints+=player.points+(kValue*(0.5-e)/DRAW_ATTENUATE);
-                            console.log("newPoints="+newPoints);
-                        }
-                    });
-                    newPoints/=(table.seats-1);
-                    text+=player.name+" drew. Points: "+player.points;
-                    if((player.points-newPoints)<=0) text+=" + ";
-                    else text+=" - ";
-                    text+=(Math.abs(player.points-newPoints));
-                    storeNewPoints[i]=newPoints;
-                    text+=" = "+storeNewPoints[i]+"<br>";
-                    break;
-                case player.id:
-                    newPoints=0;
-                    table.players.forEach(function(loser){
-                        if(loser.id!=player.id){
-                            let e=(1/(1+(10**((loser.points-player.points)/400))));
-                            //console.log(player.name+" vs. "+loser.name+": E="+e);
-                            newPoints+=player.points+(kValue*(1-e));
-                        }
-                    });
-                    newPoints/=(table.seats-1);
-                    text+=player.name+" won. Points: "+player.points+" + "+(newPoints-player.points);
-                    storeNewPoints[i]=newPoints;
-                    text+=" = "+storeNewPoints[i]+"<br>";
-                    player.roundsWon.push(roundNumber);
-                    break;
-                default:
-                    let e=(1/(1+(10**((table.players[winnerIndex].points-player.points)/400))));
-                    newPoints=player.points+(kValue*(0-e)/3);
-                    text+=player.name+" lost. Points: "+player.points+" - "+(player.points-newPoints);
-                    storeNewPoints[i]=newPoints;
-                    text+=" = "+storeNewPoints[i]+"<br>";
-                    player.roundsLost.push(roundNumber);
-            }
-        });
-        storeNewPoints.forEach(function(points,i){
-            table.players[i].points=points;
-        });
-        text+="<br>";
+        if(selectedWinner[index]!=-1){
+            table.players.forEach(function(player){
+                if(selectedWinner[index]==player.id) player.roundsWon.push(roundNumber);
+                else player.roundsLost.push(roundNumber);
+            });
+        }
     });
 
     oldTables="<p>Old tables:</p><br>";
@@ -896,11 +946,8 @@ function commitWinners() {
             if((player.roundsWon!=null)&&(player.roundsWon[player.roundsWon.length-1]==roundNumber))oldTables+="*";
             oldTables+=" | ";
         });
-        oldTables+="</p><p>----------</p>";
+        if(index<(tables.length-1))oldTables+="</p><p>----------</p>";
     });
-
-    savedPageState.tables=text;
-    document.getElementById("pageBody").innerHTML=text;
     selectedWinner=[];
-    return; 
+    storeNewPoints=null;
 }
